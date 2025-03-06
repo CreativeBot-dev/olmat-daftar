@@ -141,28 +141,89 @@ export function useDaftar() {
     });
   }
 
+  // async function postParticipant() {
+  //   setIsButtonLoading(true);
+
+  //   // Validasi apakah ada peserta yang belum memiliki foto atau dokumen
+  //   for (let i = 0; i < payload.length; i++) {
+  //     if (!payload[i].img) {
+  //       setIsButtonLoading(false);
+  //       setError(true, `Foto Peserta ke-${i + 1} tidak valid`);
+  //       return;
+  //     }
+  //     if (!payload[i].attachment) {
+  //       setIsButtonLoading(false);
+  //       setError(
+  //         true,
+  //         `Kartu pelajar atau surat rekomendasi Peserta ke-${i + 1} tidak valid`
+  //       );
+  //       return;
+  //     }
+  //   }
+
+  //   try {
+  //     const payloadForm = new FormData();
+
+  //     // Menambahkan peserta sebagai JSON string (karena backend mengharapkan string)
+  //     const participantsData = payload.map((participant) => ({
+  //       name: participant.name.toUpperCase(),
+  //       gender: participant.gender,
+  //       phone: participant.phone,
+  //       email: participant.email,
+  //       birth: participant.birth,
+  //       // school_id: schoolId,
+  //     }));
+  //     const filePost = Object.values(payload).map((file) => ({
+  //       imgs: file.img,
+  //       attachmets: file.attachment,
+  //     }));
+
+  //     participantsData.map((participant) => {
+  //       payloadForm.append("paricipants", JSON.stringify(participant));
+  //     });
+  //     payloadForm.append("payment_code", "QRIS");
+  //     filePost.forEach((file) => {
+  //       payloadForm.append("imgs", file.imgs);
+  //       payloadForm.append("attachments", file.attachmets);
+  //     });
+
+  //     // Menambahkan file dalam array imgs[] dan attachments[]
+  //     // payload.forEach((participant) => {
+  //     //   payloadForm.append("imgs", participant.img);
+  //     //   payloadForm.append("attachments", participant.attachment);
+  //     // });
+
+  //     const response = await api.post(`/participant`, payloadForm, {
+  //       headers: {
+  //         "Content-Type": "multipart/form-data",
+  //       },
+  //     });
+
+  //     setIsSuccess(true, "Pendaftaran Berhasil");
+  //     setIsButtonLoading(false);
+  //     router.push(
+  //       ROUTES.TRANSACTION + "/" + encryptString(`${response.data.payment.id}`)
+  //     );
+  //   } catch (error: any) {
+  //     setIsButtonLoading(false);
+  //     setError(
+  //       true,
+  //       error?.response?.data?.errors?.message || "Pendaftaran Gagal"
+  //     );
+  //   }
+  // }
+
   async function postParticipant() {
     setIsButtonLoading(true);
-    const dataPost = Object.values(payload).map((data) => ({
-      name: data.name.toUpperCase(),
-      gender: data.gender,
-      phone: data.phone,
-      email: data.email,
-      birth: data.birth,
-    }));
 
-    const filePost = Object.values(payload).map((file) => ({
-      imgs: file.img,
-      attachmets: file.attachment,
-    }));
     // Validasi untuk mengecek apakah ada imgs atau attachments yang undefined
-    for (let i = 0; i < filePost.length; i++) {
-      if (!filePost[i].imgs) {
+    for (let i = 0; i < payload.length; i++) {
+      if (!payload[i].img) {
         setIsButtonLoading(false);
         setError(true, `Foto Peserta ke-${i + 1} tidak valid`);
         return; // Hentikan proses jika ada file yang undefined
       }
-      if (!filePost[i].attachmets) {
+      if (!payload[i].attachment) {
         setIsButtonLoading(false);
         setError(
           true,
@@ -172,38 +233,70 @@ export function useDaftar() {
       }
     }
     try {
-      const payloadForm = new FormData();
-      dataPost.map((participat) => {
-        payloadForm.append("participants", JSON.stringify(participat));
-      });
+      const dataPost = Object.values(payload).map((data) => ({
+        name: data.name.toUpperCase(),
+        gender: data.gender,
+        phone: data.phone,
+        email: data.email,
+        birth: data.birth,
+      }));
+      const filePost = Object.values(payload).map((file) => ({
+        imgs: file.img,
+        attachmets: file.attachment,
+      }));
 
+      // const participantData = payload.map((data) => ({
+      //   name: data.name.toUpperCase(),
+      //   gender: data.gender,
+      //   phone: data.phone,
+      //   email: data.email,
+      //   birth: data.birth,
+      // }));
+
+      // const postImg = Object.values(
+      //   payload.map((data) => ({
+      //     imgs: data.img,
+      //   }))
+      // );
+      // const postAttch = Object.values(
+      //   payload.map((data) => ({
+      //     attachments: data.attachment,
+      //   }))
+      // );
+
+      const payloadForm = new FormData();
+      dataPost.map((item) => {
+        payloadForm.append("participants", JSON.stringify(item));
+      });
+      // payloadForm.append("participants", JSON.stringify(dataPost));
       payloadForm.append("school_id", `${schoolId}`);
       payloadForm.append("payment_code", "QRIS");
-      filePost.forEach((file) => {
-        payloadForm.append("imgs", file.imgs);
-        payloadForm.append("attachments", file.attachmets);
+      filePost.forEach((data) => {
+        payloadForm.append("imgs", data.imgs);
+        payloadForm.append("attachments", data.attachmets);
+      });
+      console.log(payloadForm);
+
+      const response = await api.post(`/participant`, payloadForm, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
 
-      await api
-        .post(`/participant`, payloadForm, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        })
-        .then((res) => {
-          setIsSuccess(true, "Pendaftaran Berhasil");
-          setIsButtonLoading(false);
-          router.push(
-            ROUTES.TRANSACTION + "/" + encryptString(`${res.data.payment.id}`)
-          );
-        })
-        .catch((err: any) => {
-          setIsButtonLoading(false);
-          setError(true, "Pendaftaran Gagal");
-          console.log(err);
-        });
+      console.log(response.status);
+      setIsSuccess(true, "Pendaftaran Berhasil");
+      setIsButtonLoading(false);
+      if (response.status === 201) {
+        router.push(
+          ROUTES.TRANSACTION +
+            "/" +
+            encryptString(`${response.data.payment.id}`)
+        );
+      }
     } catch (error: any) {
       if (error?.response?.data?.errors?.message) {
+        setIsButtonLoading(false);
+        setError(true, "Pendaftaran Gagal");
         setIsButtonLoading(false);
         setError(true, `${error.response.data.errors.message}`);
       }

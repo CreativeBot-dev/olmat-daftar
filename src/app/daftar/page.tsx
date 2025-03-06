@@ -12,8 +12,10 @@ import SideBarDaftar from "./components/SideBarDaftar";
 import { useDaftar } from "./useDaftar";
 import { IoArrowBackCircle } from "react-icons/io5";
 import Link from "next/link";
+import { useButtonLoading } from "@/hooks/zustand/useButtonLoading";
 
 export default function Daftar() {
+  const { setIsButtonLoading } = useButtonLoading();
   const {
     type,
     blob,
@@ -89,6 +91,7 @@ export default function Daftar() {
           <IoArrowBackCircle className="text-2xl" />
           Kembali
         </Link>
+        <button onClick={() => setIsButtonLoading(false)}>stop loading</button>
       </div>
       <div className="flex gap-2 p-3">
         <div className="min-h-screen hidden md:w-2/5 lg:w-3/12 md:flex flex-col gap-2">
