@@ -212,6 +212,7 @@ export function useDaftar() {
   //     );
   //   }
   // }
+  console.log(payload);
 
   async function postParticipant() {
     setIsButtonLoading(true);
@@ -232,14 +233,16 @@ export function useDaftar() {
         return; // Hentikan proses jika ada file yang undefined
       }
     }
+    const dataPost = Object.values(payload).map((data) => ({
+      name: data.name.toUpperCase(),
+      gender: data.gender,
+      phone: data.phone,
+      email: data.email,
+      birth: data.birth,
+    }));
+    console.log(payload);
+    console.log(dataPost);
     try {
-      const dataPost = Object.values(payload).map((data) => ({
-        name: data.name.toUpperCase(),
-        gender: data.gender,
-        phone: data.phone,
-        email: data.email,
-        birth: data.birth,
-      }));
       const filePost = Object.values(payload).map((file) => ({
         imgs: file.img,
         attachmets: file.attachment,
@@ -265,17 +268,13 @@ export function useDaftar() {
       // );
 
       const payloadForm = new FormData();
-      dataPost.map((item) => {
-        payloadForm.append("participants", JSON.stringify(item));
-      });
-      // payloadForm.append("participants", JSON.stringify(dataPost));
+      payloadForm.append("participants", JSON.stringify(dataPost));
       payloadForm.append("school_id", `${schoolId}`);
       payloadForm.append("payment_code", "QRIS");
       filePost.forEach((data) => {
         payloadForm.append("imgs", data.imgs);
         payloadForm.append("attachments", data.attachmets);
       });
-      console.log(payloadForm);
 
       const response = await api.post(`/participant`, payloadForm, {
         headers: {
@@ -283,21 +282,23 @@ export function useDaftar() {
         },
       });
 
-      console.log(response.status);
-      setIsSuccess(true, "Pendaftaran Berhasil");
-      setIsButtonLoading(false);
       if (response.status === 201) {
+        setIsSuccess(true, "Pendaftaran Berhasil");
+        setIsButtonLoading(false);
         router.push(
           ROUTES.TRANSACTION +
             "/" +
             encryptString(`${response.data.payment.id}`)
         );
-      }
-    } catch (error: any) {
-      if (error?.response?.data?.errors?.message) {
+      } else {
         setIsButtonLoading(false);
         setError(true, "Pendaftaran Gagal");
-        setIsButtonLoading(false);
+      }
+    } catch (error: any) {
+      console.log(error);
+      setIsButtonLoading(false);
+      setError(true, "Pendaftaran Gagal");
+      if (error?.response?.data?.errors?.message) {
         setError(true, `${error.response.data.errors.message}`);
       }
     }
