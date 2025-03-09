@@ -212,7 +212,6 @@ export function useDaftar() {
   //     );
   //   }
   // }
-  console.log(payload);
 
   async function postParticipant() {
     setIsButtonLoading(true);
@@ -240,68 +239,44 @@ export function useDaftar() {
       email: data.email,
       birth: data.birth,
     }));
-    console.log(payload);
-    console.log(dataPost);
-    try {
-      const filePost = Object.values(payload).map((file) => ({
-        imgs: file.img,
-        attachmets: file.attachment,
-      }));
+    const filePost = Object.values(payload).map((file) => ({
+      imgs: file.img,
+      attachmets: file.attachment,
+    }));
 
-      // const participantData = payload.map((data) => ({
-      //   name: data.name.toUpperCase(),
-      //   gender: data.gender,
-      //   phone: data.phone,
-      //   email: data.email,
-      //   birth: data.birth,
-      // }));
+    const payloadForm = new FormData();
+    payloadForm.append("participants", JSON.stringify(dataPost));
+    payloadForm.append("school_id", `${schoolId}`);
+    payloadForm.append("payment_code", "QRIS");
 
-      // const postImg = Object.values(
-      //   payload.map((data) => ({
-      //     imgs: data.img,
-      //   }))
-      // );
-      // const postAttch = Object.values(
-      //   payload.map((data) => ({
-      //     attachments: data.attachment,
-      //   }))
-      // );
+    filePost.forEach((item) => {
+      payloadForm.append("imgs", item.imgs);
+      payloadForm.append("attachments", item.attachmets);
+    });
 
-      const payloadForm = new FormData();
-      payloadForm.append("participants", JSON.stringify(dataPost));
-      payloadForm.append("school_id", `${schoolId}`);
-      payloadForm.append("payment_code", "QRIS");
-      filePost.forEach((data) => {
-        payloadForm.append("imgs", data.imgs);
-        payloadForm.append("attachments", data.attachmets);
-      });
-
-      const response = await api.post(`/participant`, payloadForm, {
+    await api
+      .post(`/participant`, payloadForm, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      });
-
-      if (response.status === 201) {
+      })
+      .then((res) => {
+        setIsButtonLoading(false);
         setIsSuccess(true, "Pendaftaran Berhasil");
         setIsButtonLoading(false);
         router.push(
-          ROUTES.TRANSACTION +
-            "/" +
-            encryptString(`${response.data.payment.id}`)
+          ROUTES.TRANSACTION + "/" + encryptString(`${res.data.payment.id}`)
         );
-      } else {
+      })
+      .catch((err) => {
+        console.log(err);
+        setIsButtonLoading(false);
         setIsButtonLoading(false);
         setError(true, "Pendaftaran Gagal");
-      }
-    } catch (error: any) {
-      console.log(error);
-      setIsButtonLoading(false);
-      setError(true, "Pendaftaran Gagal");
-      if (error?.response?.data?.errors?.message) {
-        setError(true, `${error.response.data.errors.message}`);
-      }
-    }
+        if (err?.response?.data?.errors?.message) {
+          setError(true, `${err.response.data.errors.message}`);
+        }
+      });
   }
 
   /**
